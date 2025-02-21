@@ -1,20 +1,72 @@
 import express from 'express';
 import fs from 'fs';
+import crypto from 'crypto';
+import users from './users.json';
 
 const app = express();
 const PORT = 6738;
+const tokenKey = '1a2b-3c4d-5e6f-7g8h';
 
 try {
-    app.get('/GenMock', async (req, res) => {
-        let company = new mockCompany();
-        company.name = 'comrade';
-        company.users.push(new mockUser('vadim'));
+    app.use(() => {
+        if (req.headers.authorization) {
+            jwt.verify(
+                req.headers.authorization.split(' ')[1],
+                tokenKey,
+                (err, payload) => {
+                    if (err) next();
+                    else if (payload) {
+                        for (let user of users) {
+                            if (user.id === payload.id) {
+                                req.user = user;
+                                next();
+                            }
+                        }
 
-        let mockDataJson = JSON.stringify(company);
-                
-        fs.writeFileSync('mockData.json', mockDataJson);
+                        if (!req.user) next();
+                    }
+                }
+            );
+        }
+        next();
+    })
+    app.post('/api/auth', (req, res) => {
+        for (let user of users) {
+            if (
+                req.body.login === user.login &&
+                req.body.password === user.password
+            ) {
+                return res.status(200).json({
+                    id: user.id,
+                    login: user.login,
+                    token: jwt.sign({ id: user.id }, tokenKey),
+                });
+            }
+        }
+    
+        return res
+            .status(404)
+            .json({ message: 'User not found' });
+    });
 
-        res.send(`mock generate`);
+    app.get('/GenMock', async (req, res) => {        
+        if(req.user){
+            let company = new mockCompany();
+            company.name = 'comrade';
+            company.users.push(new mockUser('vadim'));
+    
+            let mockDataJson = JSON.stringify(company);
+    
+            fs.writeFileSync('mockData.json', mockDataJson);
+    
+            res.send(`mock generate`);
+        }
+        else{
+            return res
+            .status(401)
+            .json({ message: 'Not authorized' }); 
+        }
+        
     });
     app.get('/GetMock', async (req, res) => {
         let rawdata = fs.readFileSync('mockData.json');
