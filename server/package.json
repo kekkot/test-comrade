@@ -2,7 +2,8 @@
   "dependencies": {
     "crypto": "^1.0.1",
     "express": "^4.21.2",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.4"

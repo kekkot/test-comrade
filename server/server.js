@@ -1,6 +1,6 @@
 import express from 'express';
 import fs from 'fs';
-import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import users from './users.json';
 
 const app = express();
@@ -69,9 +69,17 @@ try {
         
     });
     app.get('/GetMock', async (req, res) => {
-        let rawdata = fs.readFileSync('mockData.json');
+        if(req.user){
+            let rawdata = fs.readFileSync('mockData.json');
 
-        res.send(`${rawdata}`);
+            res.send(`${rawdata}`);
+        }
+        else{
+            return res
+            .status(401)
+            .json({ message: 'Not authorized' }); 
+        }
+        
     });
     app.listen(PORT, () => {
         console.log(`API is listening on port ${PORT}`);
