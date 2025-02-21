@@ -1,14 +1,16 @@
-import express from 'express';
-import fs from 'fs';
-import jwt from 'jsonwebtoken';
-import users from './users.json';
+const express = require('express');
+const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const users = require('./users.json');
 
 const app = express();
 const PORT = 6738;
 const tokenKey = '1a2b-3c4d-5e6f-7g8h';
 
 try {
-    app.use(() => {
+    app.use(express.json());
+
+    app.use((req, res, next) => {
         if (req.headers.authorization) {
             jwt.verify(
                 req.headers.authorization.split(' ')[1],
@@ -30,7 +32,7 @@ try {
         }
         next();
     })
-    app.post('/api/auth', (req, res) => {
+    app.post('/auth', (req, res) => {
         for (let user of users) {
             if (
                 req.body.login === user.login &&
